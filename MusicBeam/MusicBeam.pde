@@ -33,6 +33,7 @@ LinkedList<Beat> beatHistory = new LinkedList();
 Effect[] effectArray;
 
 DropdownList displays;
+int selectedScreen = 2; // Default to screen 2 (external display)
 
 Toggle projectorToggle, randomToggle;
 Slider randomTimeSlider, beatDelaySlider, minLevelSlider;
@@ -215,6 +216,8 @@ void initControls()
   minLevelSlider.setLabelVisible(false);
   minLevelSlider.setValue(0.1);
 
+  initScreenSelector();
+
   stage = new Stage(this);
   String[] args = {"Stage"};
   PApplet.runSketch(args, stage);
@@ -235,8 +238,8 @@ void initRandomControls() {
   nextButton = cp5.addButton("next").setSize(350, 45).setPosition(415, 60);
   nextButton.getCaptionLabel().set("Next Effect").align(ControlP5.CENTER, ControlP5.CENTER);
 
-  activeEffect = cp5.addRadioButton("activeEffects").setPosition(415, 115).setSize(250, 45).setItemsPerRow(1).setSpacingRow(5).setNoneSelectedAllowed(true);
-  activeSetting = cp5.addRadioButton("activeSettings").setPosition(720, 115).setSize(45, 45).setItemsPerRow(1).setSpacingRow(5);
+  activeEffect = cp5.addRadioButton("activeEffects").setPosition(415, 170).setSize(250, 45).setItemsPerRow(1).setSpacingRow(5).setNoneSelectedAllowed(true);
+  activeSetting = cp5.addRadioButton("activeSettings").setPosition(720, 170).setSize(45, 45).setItemsPerRow(1).setSpacingRow(5);
 }
 
 void initEffects()
@@ -343,6 +346,50 @@ private boolean hasEnoughScreenDevices()
   GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment(); //<>// //<>//
   GraphicsDevice[] gs = ge.getScreenDevices();
   return gs.length > 1;
+}
+
+void initScreenSelector()
+{
+  GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+  GraphicsDevice[] gs = ge.getScreenDevices();
+  
+  displays = cp5.addDropdownList("screenSelector")
+                .setPosition(415, 115)
+                .setSize(350, 200)
+                .setBarHeight(45)
+                .setItemHeight(45);
+  displays.getCaptionLabel().set("Select Display Screen").align(ControlP5.CENTER, ControlP5.CENTER);
+  displays.getCaptionLabel().getStyle().marginTop = 12;
+  
+  for (int i = 0; i < gs.length; i++) {
+    String screenLabel = "Screen " + (i + 1);
+    if (i == 0) {
+      screenLabel += " (Primary)";
+    }
+    displays.addItem(screenLabel, i + 1);
+  }
+  
+  // Set default selection to screen 2 if available, otherwise screen 1
+  if (gs.length > 1) {
+    displays.setValue(1); // Index 1 = Screen 2
+    selectedScreen = 2;
+  } else {
+    displays.setValue(0); // Index 0 = Screen 1
+    selectedScreen = 1;
+  }
+}
+
+void screenSelector(int n) {
+  selectedScreen = int(displays.getValue()) + 1;
+  println("Screen changed to: " + selectedScreen);
+  // Close and restart the stage window with new screen
+  if (stage != null) {
+    stage.getSurface().setVisible(false);
+    stage.dispose();
+    stage = new Stage(this);
+    String[] args = {"Stage"};
+    PApplet.runSketch(args, stage);
+  }
 }
 
 private void initAudioInput()
