@@ -34,8 +34,8 @@ public abstract class Effect
   {
     id = i;
     ctrl = controller;
-    stg = controller.stage;
-    frameRate = stg.frameRate;
+    attachStage(controller.stage);
+    frameRate = stg != null ? stg.frameRate : 0;
     
     int posy = 115+(i*50);
 
@@ -57,6 +57,8 @@ public abstract class Effect
 
   void refresh()
   {
+    if (stg == null)
+      return;
     frameRate = stg.frameRate;
     draw();
     resetStage();
@@ -110,6 +112,14 @@ public abstract class Effect
   void showControls()
   {
     controlGroup.show();
+  }
+
+  void attachStage(Stage stageRef)
+  {
+    stg = stageRef;
+    rotationHistory = 0;
+    translationHistory[0] = 0;
+    translationHistory[1] = 0;
   }
 
   void rotate(float r)

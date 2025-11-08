@@ -4,11 +4,14 @@ import javax.swing.JOptionPane;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.GraphicsDevice;
+import java.awt.DisplayMode;
 
 import controlP5.*;
 
 import ddf.minim.*;
 import ddf.minim.analysis.*;
+
+import processing.core.PSurface;
 
 String version = "2.7.1";
 
@@ -38,6 +41,10 @@ Toggle projectorToggle, randomToggle;
 Slider randomTimeSlider, beatDelaySlider, minLevelSlider;
 Button nextButton;
 RadioButton activeEffect, activeSetting;
+
+GraphicsDevice[] screenDevices;
+int stageDisplayIndex = 1;
+boolean effectsInitialized = false;
 
 float randomTimer = 0;
 
@@ -111,7 +118,15 @@ void nextRandom()
 
 void controlEvent(ControlEvent event)
 {
-  if (event.getName()=="next")
+  if (displays != null && event.getName().equals(displays.getName()))
+  {
+    int selectedDisplay = int(event.getValue());
+    displays.close();
+    onDisplaySelectionChanged(selectedDisplay);
+    return;
+  }
+
+  if (event.getName().equals("next"))
     nextRandom();
 }
 
@@ -215,13 +230,133 @@ void initControls()
   minLevelSlider.setLabelVisible(false);
   minLevelSlider.setValue(0.1);
 
+  initDisplaySelector();
+  createStage();
+}
+
+void initDisplaySelector()
+{
+  screenDevices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+  int availableDisplays = screenDevices != null ? screenDevices.length : 0;
+
+  int defaultDisplay = availableDisplays > 1 ? 2 : 1;
+  if (stageDisplayIndex < 1 || stageDisplayIndex > availableDisplays && availableDisplays > 0)
+    stageDisplayIndex = defaultDisplay;
+  else if (availableDisplays == 0)
+    stageDisplayIndex = 1;
+
+  displays = cp5.addDropdownList("displaySelector").setPosition(10, 165).setSize(395, 140);
+  displays.setBarHeight(25);
+  displays.setItemHeight(22);
+  displays.setOpen(false);
+  displays.getCaptionLabel().set("Projection Display").align(ControlP5.CENTER, ControlP5.CENTER);
+
+  for (int i = 0; i < availableDisplays; i++)
+  {
+    DisplayMode mode = screenDevices[i].getDisplayMode();
+    String label = "Display " + (i + 1);
+    if (mode != null)
+      label += " (" + mode.getWidth() + "x" + mode.getHeight() + ")";
+    displays.addItem(label, i + 1);
+  }
+
+  displays.setValue(stageDisplayIndex);
+}
+
+void createStage()
+{
+  if (screenDevices == null || screenDevices.length == 0)
+  {
+    screenDevices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+  }
+
+  int maxDisplayIndex = screenDevices != null ? max(1, screenDevices.length) : 1;
+  if (stageDisplayIndex < 1)
+    stageDisplayIndex = 1;
+  if (stageDisplayIndex > maxDisplayIndex)
+    stageDisplayIndex = maxDisplayIndex;
+
+  if (stage != null)
+  {
+    shutdownStage(stage);
+    stage = null;
+  }
+
   stage = new Stage(this);
   String[] args = {"Stage"};
   PApplet.runSketch(args, stage);
   stage.noLoop();
-  initEffects();
-  initSettings();
+
+  if (!effectsInitialized)
+  {
+    initEffects();
+    initSettings();
+    effectsInitialized = true;
+  } else
+    attachEffectsToStage();
+
   stage.loop();
+}
+
+void shutdownStage(Stage stageInstance)
+{
+  try
+  {
+    stageInstance.noLoop();
+  }
+  catch (Exception e)
+  {
+    if (debugMode)
+      e.printStackTrace();
+  }
+
+  try
+  {
+    PSurface surface = stageInstance.getSurface();
+    if (surface != null)
+    {
+      surface.stopThread();
+      surface.setVisible(false);
+    }
+  }
+  catch (Exception e)
+  {
+    if (debugMode)
+      e.printStackTrace();
+  }
+
+  try
+  {
+    stageInstance.dispose();
+  }
+  catch (Exception e)
+  {
+    if (debugMode)
+      e.printStackTrace();
+  }
+}
+
+void attachEffectsToStage()
+{
+  if (effectArray == null)
+    return;
+
+  for (Effect effect : effectArray)
+    if (effect != null)
+      effect.attachStage(stage);
+}
+
+void onDisplaySelectionChanged(int newDisplayIndex)
+{
+  int clampedIndex = (screenDevices != null && screenDevices.length > 0)
+    ? constrain(newDisplayIndex, 1, screenDevices.length)
+    : max(1, newDisplayIndex);
+
+  if (clampedIndex == stageDisplayIndex)
+    return;
+
+  stageDisplayIndex = clampedIndex;
+  createStage();
 }
 
 void initRandomControls() {
@@ -343,6 +478,13 @@ private boolean hasEnoughScreenDevices()
   GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment(); //<>// //<>//
   GraphicsDevice[] gs = ge.getScreenDevices();
   return gs.length > 1;
+}
+
+int getStageDisplayIndex()
+{
+  if (screenDevices != null && screenDevices.length > 0)
+    return constrain(stageDisplayIndex, 1, screenDevices.length);
+  return max(1, stageDisplayIndex);
 }
 
 private void initAudioInput()
