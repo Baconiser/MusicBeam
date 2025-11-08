@@ -22,11 +22,10 @@ jobs:
           sudo apt-get install -y curl jq unzip wget
       - name: Download Processing
         run: |
+          mkdir -p processing
           curl -L "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip" -o processing.zip
-          unzip -q processing.zip
+          unzip -q processing.zip -d processing
           rm processing.zip
-          EXTRACTED_DIR=$(ls -d processing-* | head -n 1)
-          mv "$EXTRACTED_DIR" processing
           chmod +x processing/processing-java
           echo "$PWD/processing" >> "$GITHUB_PATH"
           echo "PROCESSING_HOME=$PWD/processing" >> "$GITHUB_ENV"
@@ -66,11 +65,10 @@ jobs:
           sudo apt-get install -y curl jq unzip wget
       - name: Download Processing
         run: |
+          mkdir -p processing
           curl -L "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip" -o processing.zip
-          unzip -q processing.zip
+          unzip -q processing.zip -d processing
           rm processing.zip
-          EXTRACTED_DIR=$(ls -d processing-* | head -n 1)
-          mv "$EXTRACTED_DIR" processing
           chmod +x processing/processing-java
           echo "$PWD/processing" >> "$GITHUB_PATH"
           echo "PROCESSING_HOME=$PWD/processing" >> "$GITHUB_ENV"
