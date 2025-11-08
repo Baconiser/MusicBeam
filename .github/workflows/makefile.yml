@@ -7,7 +7,8 @@ on:
       - master
 
 env:
-  PROCESSING_VERSION: "4.3"
+  PROCESSING_VERSION: "4.4.10"
+  PROCESSING_RELEASE_TAG: "processing-1310-4.4.10"
 
 jobs:
   Ubuntu:
@@ -21,7 +22,7 @@ jobs:
           sudo apt-get install -y curl jq unzip wget
       - name: Download Processing
         run: |
-          curl -L "https://download.processing.org/processing-${PROCESSING_VERSION}-linux-x64.tgz" -o processing.tgz
+          curl -L "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64.tgz" -o processing.tgz
           tar -xzf processing.tgz
           rm processing.tgz
           mv "processing-${PROCESSING_VERSION}" processing
@@ -64,7 +65,7 @@ jobs:
           sudo apt-get install -y curl jq unzip wget
       - name: Download Processing
         run: |
-          curl -L "https://download.processing.org/processing-${PROCESSING_VERSION}-linux-x64.tgz" -o processing.tgz
+          curl -L "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64.tgz" -o processing.tgz
           tar -xzf processing.tgz
           rm processing.tgz
           mv "processing-${PROCESSING_VERSION}" processing
