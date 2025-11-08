@@ -16,7 +16,7 @@ public class Stage extends PApplet {
     if (ctrl.debugMode) {
       size(800, 600, P2D);
     } else {
-      fullScreen(P2D, 2);
+      fullScreen(P2D, ctrl.selectedScreen);
     }
   }
 
