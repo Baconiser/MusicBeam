@@ -14,17 +14,24 @@ jobs:
         uses: actions/checkout@v5
       - name: Setup Processing
         id: setup-processing
-        uses: pr1metine/setup-processing@v2.1.0
+        run: |
+          sudo apt install wget curl unzip -y
+          # Download Processing 4.3 for Linux
+          wget -q https://github.com/processing/processing4/releases/download/processing-1293-4.3/processing-4.3-linux-x64.tgz
+          # Extract Processing
+          tar -xzf processing-4.3-linux-x64.tgz
+          # Set up environment
+          echo "PROCESSING_DIR=$PWD/processing-4.3" >> $GITHUB_ENV
+          echo "$PWD/processing-4.3" >> $GITHUB_PATH
       - name: Install Processing libs
         run: |
-          sudo apt install wget curl -y
           curl -s https://api.github.com/repos/sojamo/controlp5/releases/latest | jq -r '.assets[0]["browser_download_url"]' | xargs -L 1 wget -q
-          unzip -d ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries controlP5*
+          unzip -d $PROCESSING_DIR/modes/java/libraries controlP5*
           curl -s https://api.github.com/repos/ddf/Minim/releases/latest | jq -r '.["zipball_url"]' | xargs -L 1 wget -q
-          unzip -d ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries v*
-          sudo mv ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries/ddf-Minim-* ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries/minim
+          unzip -d $PROCESSING_DIR/modes/java/libraries v*
+          sudo mv $PROCESSING_DIR/modes/java/libraries/ddf-Minim-* $PROCESSING_DIR/modes/java/libraries/minim
       - name: Linux build
-        run: processing-java --sketch=./MusicBeam --output=./output --force --export
+        run: $PROCESSING_DIR/processing-java --sketch=./MusicBeam --output=./output --force --export
       - name: Upload Linux Build
         uses: actions/upload-artifact@v5
         with:
@@ -38,17 +45,24 @@ jobs:
         uses: actions/checkout@v5
       - name: Setup Processing
         id: setup-processing
-        uses: pr1metine/setup-processing@v2.1.0
+        run: |
+          sudo apt install wget curl unzip -y
+          # Download Processing 4.3 for Linux (used to build Windows exports)
+          wget -q https://github.com/processing/processing4/releases/download/processing-1293-4.3/processing-4.3-linux-x64.tgz
+          # Extract Processing
+          tar -xzf processing-4.3-linux-x64.tgz
+          # Set up environment
+          echo "PROCESSING_DIR=$PWD/processing-4.3" >> $GITHUB_ENV
+          echo "$PWD/processing-4.3" >> $GITHUB_PATH
       - name: Install Processing libs
         run: |
-          sudo apt install wget curl -y
           curl -s https://api.github.com/repos/sojamo/controlp5/releases/latest | jq -r '.assets[0]["browser_download_url"]' | xargs -L 1 wget -q
-          unzip -d ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries controlP5*
+          unzip -d $PROCESSING_DIR/modes/java/libraries controlP5*
           curl -s https://api.github.com/repos/ddf/Minim/releases/latest | jq -r '.["zipball_url"]' | xargs -L 1 wget -q
-          unzip -d ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries v*
-          sudo mv ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries/ddf-Minim-* ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries/minim
+          unzip -d $PROCESSING_DIR/modes/java/libraries v*
+          sudo mv $PROCESSING_DIR/modes/java/libraries/ddf-Minim-* $PROCESSING_DIR/modes/java/libraries/minim
       - name: Windows build
-        run: processing-java --sketch=./MusicBeam --output=./output --variant=windows-amd64 --force --export
+        run: $PROCESSING_DIR/processing-java --sketch=./MusicBeam --output=./output --variant=windows-amd64 --force --export
       - name: Upload Windows Build
         uses: actions/upload-artifact@v5
         with:
