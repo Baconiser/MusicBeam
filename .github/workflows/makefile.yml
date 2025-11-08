@@ -25,7 +25,18 @@ jobs:
           curl -L "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip" -o processing.zip
           unzip -q processing.zip
           rm processing.zip
-          mv "processing-${PROCESSING_VERSION}" processing
+          EXTRACTED_DIR=""
+          for candidate in processing-${PROCESSING_VERSION}*; do
+            if [ -d "$candidate" ]; then
+              EXTRACTED_DIR="$candidate"
+              break
+            fi
+          done
+          if [ -z "$EXTRACTED_DIR" ]; then
+            echo "Failed to locate extracted Processing directory" >&2
+            exit 1
+          fi
+          mv "$EXTRACTED_DIR" processing
           chmod +x processing/processing-java
           echo "$PWD/processing" >> "$GITHUB_PATH"
           echo "PROCESSING_HOME=$PWD/processing" >> "$GITHUB_ENV"
@@ -68,7 +79,18 @@ jobs:
           curl -L "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip" -o processing.zip
           unzip -q processing.zip
           rm processing.zip
-          mv "processing-${PROCESSING_VERSION}" processing
+          EXTRACTED_DIR=""
+          for candidate in processing-${PROCESSING_VERSION}*; do
+            if [ -d "$candidate" ]; then
+              EXTRACTED_DIR="$candidate"
+              break
+            fi
+          done
+          if [ -z "$EXTRACTED_DIR" ]; then
+            echo "Failed to locate extracted Processing directory" >&2
+            exit 1
+          fi
+          mv "$EXTRACTED_DIR" processing
           chmod +x processing/processing-java
           echo "$PWD/processing" >> "$GITHUB_PATH"
           echo "PROCESSING_HOME=$PWD/processing" >> "$GITHUB_ENV"
