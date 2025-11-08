@@ -6,23 +6,45 @@ on:
     branches:
       - master
 
+env:
+  PROCESSING_VERSION: "4.3"
+
 jobs:
   Ubuntu:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      - name: Setup Processing
-        id: setup-processing
-        uses: pr1metine/setup-processing@v2.1.0
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl jq unzip wget
+      - name: Download Processing
+        run: |
+          curl -L "https://download.processing.org/processing-${PROCESSING_VERSION}-linux-x64.tgz" -o processing.tgz
+          tar -xzf processing.tgz
+          rm processing.tgz
+          mv "processing-${PROCESSING_VERSION}" processing
+          chmod +x processing/processing-java
+          echo "$PWD/processing" >> "$GITHUB_PATH"
+          echo "PROCESSING_HOME=$PWD/processing" >> "$GITHUB_ENV"
       - name: Install Processing libs
         run: |
-          sudo apt install wget curl -y
-          curl -s https://api.github.com/repos/sojamo/controlp5/releases/latest | jq -r '.assets[0]["browser_download_url"]' | xargs -L 1 wget -q
-          unzip -d ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries controlP5*
-          curl -s https://api.github.com/repos/ddf/Minim/releases/latest | jq -r '.["zipball_url"]' | xargs -L 1 wget -q
-          unzip -d ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries v*
-          sudo mv ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries/ddf-Minim-* ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries/minim
+          mkdir -p "$PROCESSING_HOME/modes/java/libraries"
+          CONTROL_P5_URL=$(curl -s https://api.github.com/repos/sojamo/controlp5/releases/latest | jq -r '.assets[0]["browser_download_url"]')
+          curl -L "$CONTROL_P5_URL" -o controlP5.zip
+          unzip -d "$PROCESSING_HOME/modes/java/libraries" controlP5.zip
+          rm controlP5.zip
+          MINIM_URL=$(curl -s https://api.github.com/repos/ddf/Minim/releases/latest | jq -r '.["zipball_url"]')
+          curl -L "$MINIM_URL" -o minim.zip
+          unzip -d "$PROCESSING_HOME/modes/java/libraries" minim.zip
+          MINIM_SOURCE=$(find "$PROCESSING_HOME/modes/java/libraries" -maxdepth 1 -type d -name "ddf-Minim-*" | head -n1)
+          if [ -z "$MINIM_SOURCE" ]; then
+            echo "Failed to locate Minim library directory" >&2
+            exit 1
+          fi
+          mv "$MINIM_SOURCE" "$PROCESSING_HOME/modes/java/libraries/minim"
+          rm minim.zip
       - name: Linux build
         run: processing-java --sketch=./MusicBeam --output=./output --force --export
       - name: Upload Linux Build
@@ -36,17 +58,36 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      - name: Setup Processing
-        id: setup-processing
-        uses: pr1metine/setup-processing@v2.1.0
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl jq unzip wget
+      - name: Download Processing
+        run: |
+          curl -L "https://download.processing.org/processing-${PROCESSING_VERSION}-linux-x64.tgz" -o processing.tgz
+          tar -xzf processing.tgz
+          rm processing.tgz
+          mv "processing-${PROCESSING_VERSION}" processing
+          chmod +x processing/processing-java
+          echo "$PWD/processing" >> "$GITHUB_PATH"
+          echo "PROCESSING_HOME=$PWD/processing" >> "$GITHUB_ENV"
       - name: Install Processing libs
         run: |
-          sudo apt install wget curl -y
-          curl -s https://api.github.com/repos/sojamo/controlp5/releases/latest | jq -r '.assets[0]["browser_download_url"]' | xargs -L 1 wget -q
-          unzip -d ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries controlP5*
-          curl -s https://api.github.com/repos/ddf/Minim/releases/latest | jq -r '.["zipball_url"]' | xargs -L 1 wget -q
-          unzip -d ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries v*
-          sudo mv ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries/ddf-Minim-* ${{steps.setup-processing.outputs.install-dir}}/modes/java/libraries/minim
+          mkdir -p "$PROCESSING_HOME/modes/java/libraries"
+          CONTROL_P5_URL=$(curl -s https://api.github.com/repos/sojamo/controlp5/releases/latest | jq -r '.assets[0]["browser_download_url"]')
+          curl -L "$CONTROL_P5_URL" -o controlP5.zip
+          unzip -d "$PROCESSING_HOME/modes/java/libraries" controlP5.zip
+          rm controlP5.zip
+          MINIM_URL=$(curl -s https://api.github.com/repos/ddf/Minim/releases/latest | jq -r '.["zipball_url"]')
+          curl -L "$MINIM_URL" -o minim.zip
+          unzip -d "$PROCESSING_HOME/modes/java/libraries" minim.zip
+          MINIM_SOURCE=$(find "$PROCESSING_HOME/modes/java/libraries" -maxdepth 1 -type d -name "ddf-Minim-*" | head -n1)
+          if [ -z "$MINIM_SOURCE" ]; then
+            echo "Failed to locate Minim library directory" >&2
+            exit 1
+          fi
+          mv "$MINIM_SOURCE" "$PROCESSING_HOME/modes/java/libraries/minim"
+          rm minim.zip
       - name: Windows build
         run: processing-java --sketch=./MusicBeam --output=./output --variant=windows-amd64 --force --export
       - name: Upload Windows Build
