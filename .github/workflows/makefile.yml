@@ -70,11 +70,11 @@ jobs:
           rm processing.zip
           echo "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip"
           ls
-          cd processing
+          cd Processing
           ls
-          chmod +x processing/bin/Processing"
-          echo "$PWD/processing" >> "$GITHUB_PATH"
-          echo "PROCESSING_HOME=$PWD/processing" >> "$GITHUB_ENV"
+          chmod +x Processing/bin/Processing"
+          echo "$PWD/Processing" >> "$GITHUB_PATH"
+          echo "PROCESSING_HOME=$PWD/Processing" >> "$GITHUB_ENV"
       - name: Install Processing libs
         run: |
           mkdir -p "$PROCESSING_HOME/modes/java/libraries"
