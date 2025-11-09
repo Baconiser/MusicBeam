@@ -25,7 +25,6 @@ jobs:
           curl -L "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip" -o processing.zip
           unzip -q processing.zip
           rm processing.zip
-          mv "processing-${PROCESSING_VERSION}" processing
           chmod +x processing/processing-java
           echo "$PWD/processing" >> "$GITHUB_PATH"
           echo "PROCESSING_HOME=$PWD/processing" >> "$GITHUB_ENV"
