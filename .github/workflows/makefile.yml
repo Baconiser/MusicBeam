@@ -71,8 +71,8 @@ jobs:
           echo "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip"
           ls
           cd Processing
-          ls
-          chmod +x Processing/bin/Processing"
+          ls -la
+          chmod +x bin/Processing"
           echo "$PWD/Processing" >> "$GITHUB_PATH"
           echo "PROCESSING_HOME=$PWD/Processing" >> "$GITHUB_ENV"
       - name: Install Processing libs
