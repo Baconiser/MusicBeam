@@ -72,7 +72,7 @@ jobs:
           ls
           cd processing
           ls
-          chmod +x processing/bin/processing-java
+          chmod +x processing/bin/Processing"
           echo "$PWD/processing" >> "$GITHUB_PATH"
           echo "PROCESSING_HOME=$PWD/processing" >> "$GITHUB_ENV"
       - name: Install Processing libs
