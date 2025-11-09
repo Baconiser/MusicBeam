@@ -9,6 +9,7 @@ on:
 env:
   PROCESSING_VERSION: "4.4.10"
   PROCESSING_RELEASE_TAG: "processing-1310-4.4.10"
+  PROCESSING_URL: "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip"
 
 jobs:
   Ubuntu:
@@ -67,8 +68,8 @@ jobs:
           curl -L "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip" -o processing.zip
           unzip -q processing.zip
           rm processing.zip
-          
-          chmod +x processing/processing-java
+          echo "${PROCESSING_URL}"
+          chmod +x processing/bin/processing-java
           echo "$PWD/processing" >> "$GITHUB_PATH"
           echo "PROCESSING_HOME=$PWD/processing" >> "$GITHUB_ENV"
       - name: Install Processing libs
