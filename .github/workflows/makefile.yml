@@ -12,49 +12,6 @@ env:
   PROCESSING_URL: "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip"
 
 jobs:
-  Ubuntu:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-      - name: Install prerequisites
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl jq unzip wget
-      - name: Download Processing
-        run: |
-          curl -L "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip" -o processing.zip
-          unzip -q processing.zip
-          rm processing.zip
-          chmod +x ./Processing/bin/Processing"
-          echo "$PWD/Processing" >> "$GITHUB_PATH"
-          echo "PROCESSING_HOME=$PWD/Processing" >> "$GITHUB_ENV"
-
-      - name: Install Processing libs
-        run: |
-          mkdir -p "$PROCESSING_HOME/modes/java/libraries"
-          CONTROL_P5_URL=$(curl -s https://api.github.com/repos/sojamo/controlp5/releases/latest | jq -r '.assets[0]["browser_download_url"]')
-          curl -L "$CONTROL_P5_URL" -o controlP5.zip
-          unzip -d "$PROCESSING_HOME/modes/java/libraries" controlP5.zip
-          rm controlP5.zip
-          MINIM_URL=$(curl -s https://api.github.com/repos/ddf/Minim/releases/latest | jq -r '.["zipball_url"]')
-          curl -L "$MINIM_URL" -o minim.zip
-          unzip -d "$PROCESSING_HOME/modes/java/libraries" minim.zip
-          MINIM_SOURCE=$(find "$PROCESSING_HOME/modes/java/libraries" -maxdepth 1 -type d -name "ddf-Minim-*" | head -n1)
-          if [ -z "$MINIM_SOURCE" ]; then
-            echo "Failed to locate Minim library directory" >&2
-            exit 1
-          fi
-          mv "$MINIM_SOURCE" "$PROCESSING_HOME/modes/java/libraries/minim"
-          rm minim.zip
-      - name: Linux build
-        run: processing-java --sketch=./MusicBeam --output=./output --force --export
-      - name: Upload Linux Build
-        uses: actions/upload-artifact@v5
-        with:
-          name: Linux Build
-          path: output
-
   Windows:
     runs-on: ubuntu-latest
     steps:
@@ -66,15 +23,35 @@ jobs:
           sudo apt-get install -y curl jq unzip wget
       - name: Download Processing
         run: |
-          curl -L "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip" -o processing.zip
+          echo "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip"
+          wget --tries=10 --timeout=30 --continue "https://github.com/processing/processing4/releases/download/${PROCESSING_RELEASE_TAG}/processing-${PROCESSING_VERSION}-linux-x64-portable.zip" -O processing.zip
+          echo "DOWNLOADED"
           unzip -q processing.zip
           rm processing.zip
           
-          chmod +x ./Processing/bin/Processing"
+          chmod +x "./Processing/bin/Processing"
           echo "$PWD/Processing" >> "$GITHUB_PATH"
           echo "PROCESSING_HOME=$PWD/Processing" >> "$GITHUB_ENV"
+
+      - name: Install Processing libs
+        run: |
+          mkdir -p "$PROCESSING_HOME/lib/app/resources/modes/java/libraries"
+          CONTROL_P5_URL=$(curl -s https://api.github.com/repos/sojamo/controlp5/releases/latest | jq -r '.assets[0]["browser_download_url"]')
+          curl -L "$CONTROL_P5_URL" -o controlP5.zip
+          unzip -d "$PROCESSING_HOME/lib/app/resources/modes/java/libraries" controlP5.zip
+          rm controlP5.zip
+          MINIM_URL=$(curl -s https://api.github.com/repos/ddf/Minim/releases/latest | jq -r '.["zipball_url"]')
+          curl -L "$MINIM_URL" -o minim.zip
+          unzip -d "$PROCESSING_HOME/lib/app/resources/modes/java/libraries" minim.zip
+          MINIM_SOURCE=$(find "$PROCESSING_HOME/lib/app/resources/modes/java/libraries" -maxdepth 1 -type d -name "ddf-Minim-*" | head -n1)
+          if [ -z "$MINIM_SOURCE" ]; then
+            echo "Failed to locate Minim library directory" >&2
+            exit 1
+          fi
+          mv "$MINIM_SOURCE" "$PROCESSING_HOME/lib/app/resources/modes/java/libraries/minim"
+          rm minim.zip
       - name: Windows build
-        run: ./Processing/bin/Processing --sketch=./MusicBeam --output=./output --variant=windows-amd64 --force --export
+        run: ./Processing/bin/Processing cli --sketch=./MusicBeam --output=./output --variant=windows-amd64 --force --export
       - name: Upload Windows Build
         uses: actions/upload-artifact@v5
         with:
